@@ -148,6 +148,20 @@
         #loginForm > input[type="submit"]:hover {
             background-color: #1900ff;
         }
+
+        .forgot-password {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .forgot-password a {
+            color: #2750d6;
+            text-decoration: none;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -184,9 +198,13 @@
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
                 <input type="submit" value="Submit">
+                <div class="forgot-password">
+                    <a href="forgot_password.html">Forgot Password?</a>
+                </div>
             </form>
         </div>
     </div>
 
 </body>
 </html>
+
