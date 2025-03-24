@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Registration System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <nav class="w-64 bg-gradient-to-b from-blue-800 to-blue-600 text-white p-5 shadow-lg">
+            <h2 class="text-3xl font-bold mb-5">Course Portal</h2>
+            <ul class="space-y-4 text-lg">
+                <li><a href="index.html" class="hover:text-gray-300">🏠 Dashboard</a></li>
+                <li><a href="courses.html" class="hover:text-gray-300">📚 Courses</a></li>
+                <li><a href="my_courses.html" class="hover:text-gray-300">🎓 My Courses</a></li>
+                <li><a href="timetable.html" class="hover:text-gray-300">🕒 Timetable</a></li>
+                <li><a href="settings.html" class="hover:text-gray-300">⚙️ Settings</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-6">
+            <header class="flex justify-between items-center bg-white p-4 rounded shadow-md">
+                <h1 class="text-3xl font-semibold">Welcome, Student</h1>
+                <button class="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700">Logout</button>
+            </header>
+            <section class="mt-6">
+                <h2 class="text-xl font-semibold mb-3">Quick Actions</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-blue-600 text-white p-5 rounded-lg shadow-lg transition hover:scale-105">
+                        <h3 class="text-lg font-semibold">📢 Announcements</h3>
+                        <p>Check latest updates</p>
+                    </div>
+                    <div class="bg-green-600 text-white p-5 rounded-lg shadow-lg transition hover:scale-105">
+                        <h3 class="text-lg font-semibold">📜 New Courses</h3>
+                        <p>Explore latest additions</p>
+                    </div>
+                    <div class="bg-purple-600 text-white p-5 rounded-lg shadow-lg transition hover:scale-105">
+                        <h3 class="text-lg font-semibold">📅 Schedule</h3>
+                        <p>View your class timetable</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>
