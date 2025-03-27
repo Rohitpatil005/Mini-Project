@@ -118,21 +118,21 @@
         <div class="logo" onclick="window.location.href='index.html'">MIT-WPU</div>
         <div>
             <a href="index.html">Home</a>
-            <a href="department.html">Department</a>
-            <a href="courses.html">Courses</a>
-            <a href="about.html">Admin Login</a>
             <a href="index.html">Student Login</a>
         </div>
     </div>
 
     <div class="main-container">
-        <form id="loginForm" action="teacherdashboard/index.html" method="POST">
+        <form id="loginForm" action="teacherdashboard/index.html" method="get">
             <h2>Teacher Log In</h2>
             <label for="teacherId">Teacher ID:</label>
             <input type="text" id="teacherId" name="teacherId" required>
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
             <input type="submit" value="Submit">
+            <div class="forgot-password">
+                <a href="forgot_password.html">Forgot Password?</a>
+            </div>
         </form>
     </div>
 
