@@ -9,13 +9,13 @@
 <body class="bg-gray-100">
     <div class="flex h-screen">
         <!-- Sidebar -->
-        <nav class="w-64 bg-gradient-to-b from-blue-800 to-blue-600 text-white p-5 shadow-lg">
+        <nav class="w-64 bg-gradient-to-b from-purple-800 to-blue-600 text-white p-5 shadow-lg">
             <h2 class="text-3xl font-bold mb-5">Course Portal</h2>
             <ul class="space-y-4 text-lg">
                 <li><a href="index.html" class="hover:text-gray-300">🏠 Dashboard</a></li>
-                <li><a href="courses.html" class="hover:text-gray-300">📚 Courses</a></li>
-                <li><a href="my_courses.html" class="hover:text-gray-300">🎓 My Courses</a></li>
-                <li><a href="timetable.html" class="hover:text-gray-300">🕒 Timetable</a></li>
+                <li><a href="courses.html" class="hover:text-gray-300">📚 Course Management</a></li>
+                <li><a href="my_courses.html" class="hover:text-gray-300">🎓 Student Interaction</a></li>
+                <li><a href="timetable.html" class="hover:text-gray-300">📝 Grading & Assesments</a></li>
                 <li><a href="settings.html" class="hover:text-gray-300">⚙️ Settings</a></li>
             </ul>
         </nav>
@@ -23,7 +23,7 @@
         <!-- Main Content -->
         <div class="flex-1 p-6">
             <header class="flex justify-between items-center bg-white p-4 rounded shadow-md">
-                <h1 class="text-3xl font-semibold">Welcome, Student</h1>
+                <h1 class="text-3xl font-semibold">Welcome, Teacher</h1>
                 <button class="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700">Logout</button>
             </header>
             <section class="mt-6">
@@ -41,6 +41,28 @@
                         <h3 class="text-lg font-semibold">📅 Schedule</h3>
                         <p>View your class timetable</p>
                     </div>
+                </div>
+            </section>
+            <!-- Course Search -->
+            <section class="mt-6">
+                <h2 class="text-xl font-semibold mb-3">🔎 Search Students</h2>
+                <input type="text" placeholder="Search students..." class="w-full p-3 rounded border-gray-300 shadow">
+            </section>
+
+            <!-- AI Recommendations -->
+            <section class="mt-6">
+                <h2 class="text-xl font-semibold mb-3">🤖 AI-Based Student Performance Insights</h2>
+                <div class="bg-yellow-500 text-white p-5 rounded-lg shadow-lg">
+                    <p>Based on analysis following students need attention: <strong>Student 1</strong></p>
+                </div>
+            </section>
+
+            <!-- Grade Tracking -->
+            <section class="mt-6">
+                <h2 class="text-xl font-semibold mb-3">📊 Performance Tracking</h2>
+                <div class="bg-gray-800 text-white p-5 rounded-lg shadow-lg">
+                    <p>Export Reports <strong></strong></p>
+                    <button class="mt-2 bg-blue-500 text-white px-4 py-2 rounded">Download Report (PDF)</button>
                 </div>
             </section>
         </div>
