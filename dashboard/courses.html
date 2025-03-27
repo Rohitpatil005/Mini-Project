@@ -5,20 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Available Courses</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        function filterCourses() {
+            let input = document.getElementById("search").value.toLowerCase();
+            let courseCards = document.getElementsByClassName("course-card");
+            
+            for (let card of courseCards) {
+                let title = card.getElementsByTagName("h3")[0].innerText.toLowerCase();
+                if (title.includes(input)) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            }
+        }
+    </script>
 </head>
 <body class="bg-gray-100 p-6">
-    <h2 class="text-3xl font-bold mb-6 text-blue-800">Available Courses</h2>
+    <h2 class="text-4xl font-extrabold mb-6 text-gray-800 text-center uppercase tracking-wide">Explore Our Courses</h2>
+    
+    <input id="search" type="text" placeholder="Search courses..." onkeyup="filterCourses()" class="w-full p-3 rounded border-gray-300 shadow mb-6">
+    
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition">
-            <h3 class="text-lg font-semibold">💻 Web Development</h3>
-            <p>Instructor: John Doe</p>
+        
+        <div class="bg-gray-800 text-white p-6 rounded-lg shadow-lg hover:shadow-xl transition course-card">
+            <h3 class="text-lg font-semibold">💻 Business Applications of Digital Technology</h3>
+            <p>Instructor: Dr. Satish Chinchorkar</p>
+            <p>Email: satish.chinchorkar@example.com</p>
+            <p>Mode: Blended (Online & Asynchronous)</p>
             <button class="mt-3 bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700">Enroll</button>
         </div>
-        <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition">
-            <h3 class="text-lg font-semibold">📊 Data Science</h3>
-            <p>Instructor: Jane Smith</p>
+        
+        <div class="bg-gray-800 text-white p-6 rounded-lg shadow-lg hover:shadow-xl transition course-card">
+            <h3 class="text-lg font-semibold">📊 Business Intelligence and Data Visualisation</h3>
+            <p>Instructor: Dr. Vijeta Singh</p>
+            <p>Email: vijeta.singh@example.com</p>
+            <p>Mode: Blended (Online & Asynchronous)</p>
             <button class="mt-3 bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700">Enroll</button>
         </div>
+        
+        <div class="bg-gray-800 text-white p-6 rounded-lg shadow-lg hover:shadow-xl transition course-card">
+            <h3 class="text-lg font-semibold">📝 Professional Communication</h3>
+            <p>Instructor: Dr. Gopa Nayak</p>
+            <p>Email: gopa.nayak@example.com</p>
+            <p>Mode: Blended (Offline & Asynchronous)</p>
+            <button class="mt-3 bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700">Enroll</button>
+        </div>
+        
+        <div class="bg-gray-800 text-white p-6 rounded-lg shadow-lg hover:shadow-xl transition course-card">
+            <h3 class="text-lg font-semibold">🚀 Entrepreneurship</h3>
+            <p>Instructor: Dr. Jackson Khumukcham</p>
+            <p>Email: jackson.khumukcham@example.com</p>
+            <p>Mode: Blended (Online & Asynchronous)</p>
+            <button class="mt-3 bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700">Enroll</button>
+        </div>
+        
+        <div class="bg-gray-800 text-white p-6 rounded-lg shadow-lg hover:shadow-xl transition course-card">
+            <h3 class="text-lg font-semibold">🌍 Tourism Marketing</h3>
+            <p>Instructor: Dr. Ravi Kshirsagar</p>
+            <p>Email: ravi.kshirsagar@example.com</p>
+            <p>Mode: Blended (Online & Asynchronous)</p>
+            <button class="mt-3 bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700">Enroll</button>
+        </div>
+        
     </div>
 </body>
 </html>
