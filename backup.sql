@@ -698,3 +698,60 @@ LOCK TABLES `users` WRITE;;
 INSERT INTO `users` VALUES (1,'Admin User','admin@mitwpu.edu.in','hashed_password_1'),(2,'Professor Aman Gupta','johndoe@mitwpu.edu.in','hashed_password_2'),(3,'Professor Ashneer Grover','janesmith@mitwpu.edu.in','hashed_password_3');;
 UNLOCK TABLES;
 
+DELETE FROM announcements;
+delete from reports;
+delete from support_tickets;
+delete from user_settings;
+delete from users;
+ALTER TABLE users ADD COLUMN student_id INT;
+ALTER TABLE users ADD CONSTRAINT fk_student_id FOREIGN KEY (student_id) REFERENCES student(Student_ID);
+
+insert into users (name, email, password_hash, student_id) VALUES
+('Aarav Sharma', 'aarav.sharma@gmail.com', 'hash_aarav123', 1001),
+('Ishita Patel', 'ishita.patel@gmail.com', 'hash_ishita123', 1002),
+('Rohan Iyer', 'rohan.iyer@gmail.com', 'hash_rohan123', 1003),
+('Sneha Verma', 'sneha.verma@gmail.com', 'hash_sneha123', 1004),
+('Aditya Menon', 'aditya.menon@gmail.com', 'hash_aditya123', 1005),
+('Priya Nair', 'priya.nair@gmail.com', 'hash_priya123', 1006),
+('Rahul Deshmukh', 'rahul.deshmukh@gmail.com', 'hash_rahul123', 1007),
+('Kavya Joshi', 'kavya.joshi@gmail.com', 'hash_kavya123', 1008),
+('Aniket Saxena', 'aniket.saxena@gmail.com', 'hash_aniket123', 1009),
+('Meera Kapoor', 'meera.kapoor@gmail.com', 'hash_meera123', 1010);
+
+INSERT INTO announcements (title, description, posted_by, expiry_date)
+VALUES 
+('New Semester Begins', 'Classes for the new semester will commence from next Monday.', 4, '2025-06-01'),
+('Library Timings Extended', 'The library will now be open until 9 PM on weekdays.', 5, '2025-05-31'),
+('Workshop on AI', 'Join us for an exciting workshop on Artificial Intelligence.', 6, '2025-06-15');
+
+INSERT INTO announcements (title, description, posted_by, expiry_date)
+VALUES 
+('New Semester Begins', 'Classes for the new semester will commence from next Monday.', 4, '2025-06-01'),
+('Library Timings Extended', 'The library will now be open until 9 PM on weekdays.', 5, '2025-05-31'),
+('Workshop on AI', 'Join us for an exciting workshop on Artificial Intelligence.', 6, '2025-06-15');
+
+INSERT INTO support_tickets (user_id, name, email, message, status)
+VALUES 
+(7, 'Sneha Verma', 'sneha.verma@gmail.com', 'Unable to login to my account.', 'Open'),
+(8, 'Aditya Menon', 'aditya.menon@gmail.com', 'Issue with viewing grades.', 'In Progress'),
+(9, 'Priya Nair', 'priya.nair@gmail.com', 'Facing issues with course enrollment.', 'Resolved');
+
+INSERT INTO user_settings (user_id, profile_picture, change_password, email_notifications, push_notifications)
+VALUES 
+(10, 'profile_rahul.jpg', 0, 1, 1),
+(11, 'profile_kavya.png', 1, 1, 0),
+(12, 'profile_aniket.jpeg', 0, 0, 1);
+
+
+INSERT INTO reports (report_type, description, generated_by, file_path)
+VALUES 
+('Student Progress', 'Progress report for second year students.', 13, 'reports/progress_2025.pdf'),
+('Attendance Report', 'Monthly attendance report.', 4, 'reports/attendance_may.pdf'),
+('Performance Analytics', 'Analysis of student performance trends.', 5, 'reports/performance_q2.pdf');
+
+
+INSERT INTO notifications (user_id, message, is_read)
+VALUES 
+(4, 'Welcome to the portal!', 0),
+(5, 'Your password was changed recently.', 1),
+(6, 'You have a new announcement.', 0);
