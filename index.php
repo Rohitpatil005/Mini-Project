@@ -188,11 +188,6 @@
         <div class="login-container">
             <form id="loginForm" action="student_login.php" method="post">
                 <h2>Log In</h2>
-                <?php if (isset($_SESSION['error'])): ?>
-                    <div class="error-message" style="color: red; margin-bottom: 15px;">
-                        <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
-                    </div>
-                <?php endif; ?>
                 <label for="student_id">Student ID:</label>
                 <input type="text" id="student_id" name="student_id" required>                
                 <label for="password">Password:</label>
