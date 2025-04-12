@@ -8,16 +8,16 @@ ini_set('display_errors', 1);
 
 // Redirect if not logged in
 if (!isset($_SESSION['loginUser'])) {
-    header("Location: ../index.php"); // Relative URL path
+    header("Location: ../index.php");
     exit();
 }
 
 // Database connection
-require '../db.php'; // Make sure this path is correct
+require '../db.php';
 
 // Fetch student details
 $stmt = $conn->prepare("SELECT * FROM student WHERE Student_ID = ?");
-$stmt->bind_param("s", $_SESSION['loginUser']); // Changed to match your login system
+$stmt->bind_param("s", $_SESSION['loginUser']);
 $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
 
@@ -55,33 +55,35 @@ $progress = $progress_result['avg_progress'] ?? 0;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard</title>
+    <title>Course Registration System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom animation for hover effects */
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.03);
+        }
+    </style>
 </head>
 <body class="bg-gray-100 text-gray-800 transition-all">
     <div class="flex h-screen">
-        <!-- Navigation Sidebar -->
-        <div class="w-64 bg-gray-800 text-white p-4">
-            <div class="text-xl font-bold mb-8">Electives Management</div>
-            <nav>
-                <ul>
-                    <li class="mb-2">
-                        <a href="#" class="block p-2 bg-gray-700 rounded">Dashboard</a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="courses.php" class="block p-2 hover:bg-gray-700 rounded">My Courses</a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="grades.php" class="block p-2 hover:bg-gray-700 rounded">Grades</a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="profile.php" class="block p-2 hover:bg-gray-700 rounded">Profile</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-        
-        <div class="flex-1 p-6">
+
+        <!-- Navigation Sidebar - Using your improved design -->
+        <nav class="w-64 bg-gray-800 text-white p-5 shadow-lg transition-transform duration-300">
+            <h2 class="text-3xl font-bold mb-5">Course Portal</h2>
+            <ul class="space-y-4 text-lg">
+                <li><a href="student_dashboard.php" class="hover:text-gray-400 flex items-center">🏠 Dashboard</a></li>
+                <li><a href="courses.php" class="hover:text-gray-400 flex items-center">📚 Courses</a></li>
+                <li><a href="my_courses.php" class="hover:text-gray-400 flex items-center">🎓 My Courses</a></li>
+                <li><a href="results.php" class="hover:text-gray-400 flex items-center">📜 Results</a></li>
+                <li><a href="settings.php" class="hover:text-gray-400 flex items-center">⚙️ Settings</a></li>
+            </ul>
+        </nav>
+
+        <div class="flex-1 p-6 overflow-y-auto">
+            <!-- Header with your design -->
             <header class="flex justify-between items-center bg-gray-800 p-4 rounded shadow-md">
                 <div class="flex items-center space-x-4">
                     <img src="profile.jpg" alt="Student Avatar" class="w-12 h-12 rounded-full">
@@ -92,57 +94,116 @@ $progress = $progress_result['avg_progress'] ?? 0;
                 </div>
             </header>
 
-            <!-- Dashboard Content -->
-            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Announcements Card -->
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-semibold mb-4">Announcements</h2>
+            <!-- Quick Actions Section with your design -->
+            <section class="mt-6">
+                <h2 class="text-xl font-semibold mb-3">Quick Actions</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gray-800 text-white p-5 rounded-lg shadow-lg hover-scale cursor-pointer">
+                        <a href="announcements.php" class="block">
+                            <h3 class="text-lg font-semibold">📢 Announcements</h3>
+                            <p>Check latest updates</p>
+                        </a>
+                    </div>
+                    <div class="bg-gray-800 text-white p-5 rounded-lg shadow-lg hover-scale cursor-pointer">
+                        <a href="new_courses.php" class="block">
+                            <h3 class="text-lg font-semibold">📜 New Courses</h3>
+                            <p>Explore latest additions</p>
+                        </a>
+                    </div>
+                    <div class="bg-gray-800 text-white p-5 rounded-lg shadow-lg hover-scale cursor-pointer">
+                        <a href="schedule.php" class="block">
+                            <h3 class="text-lg font-semibold">📅 Schedule</h3>
+                            <p>View your class timetable</p>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Announcements Section - Dynamic from database -->
+            <section class="mt-6">
+                <h2 class="text-xl font-semibold mb-3">Recent Announcements</h2>
+                <div class="bg-gray-800 text-white p-5 rounded-lg shadow-lg">
                     <?php if ($announcements->num_rows > 0): ?>
-                        <ul class="space-y-3">
+                        <div class="space-y-4">
                             <?php while ($announcement = $announcements->fetch_assoc()): ?>
-                                <li class="border-b pb-2">
-                                    <h3 class="font-medium"><?= htmlspecialchars($announcement['title']) ?></h3>
-                                    <p class="text-sm text-gray-600"><?= htmlspecialchars($announcement['content']) ?></p>
-                                    <p class="text-xs text-gray-500 mt-1">
+                                <div class="border-b border-gray-700 pb-3 last:border-0 last:pb-0">
+                                    <h3 class="font-semibold text-lg"><?= htmlspecialchars($announcement['title']) ?></h3>
+                                    <p class="text-gray-300"><?= htmlspecialchars($announcement['content']) ?></p>
+                                    <p class="text-sm text-gray-400 mt-1">
                                         Posted: <?= date('M j, Y', strtotime($announcement['created_at'])) ?>
+                                        <?php if ($announcement['expiry_date']): ?>
+                                            | Expires: <?= date('M j, Y', strtotime($announcement['expiry_date'])) ?>
+                                        <?php endif; ?>
                                     </p>
-                                </li>
+                                </div>
                             <?php endwhile; ?>
-                        </ul>
+                        </div>
                     <?php else: ?>
                         <p>No current announcements</p>
                     <?php endif; ?>
                 </div>
+            </section>
 
-                <!-- Courses Card -->
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-semibold mb-4">My Courses</h2>
-                    <?php if ($courses->num_rows > 0): ?>
-                        <ul class="space-y-3">
-                            <?php while ($course = $courses->fetch_assoc()): ?>
-                                <li class="border-b pb-2">
-                                    <h3 class="font-medium"><?= htmlspecialchars($course['Elective_Name']) ?></h3>
-                                    <p class="text-sm text-gray-600">
-                                        Enrolled: <?= date('M j, Y', strtotime($course['Entollment_Date'])) ?>
-                                    </p>
-                                </li>
-                            <?php endwhile; ?>
-                        </ul>
-                    <?php else: ?>
-                        <p>No enrolled courses</p>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Progress Card -->
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-semibold mb-4">My Progress</h2>
-                    <div class="w-full bg-gray-200 rounded-full h-4">
-                        <div class="bg-blue-600 h-4 rounded-full" 
-                             style="width: <?= min(100, max(0, $progress)) ?>%"></div>
+            <!-- My Courses Section - Dynamic from database -->
+            <section class="mt-6">
+                <h2 class="text-xl font-semibold mb-3">My Courses</h2>
+                <?php if ($courses->num_rows > 0): ?>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <?php while ($course = $courses->fetch_assoc()): ?>
+                            <div class="bg-gray-800 text-white p-5 rounded-lg shadow-lg hover-scale">
+                                <h3 class="text-lg font-semibold">📚 <?= htmlspecialchars($course['Elective_Name']) ?></h3>
+                                <p class="text-gray-300 mt-2">
+                                    Enrolled: <?= date('M j, Y', strtotime($course['Entollment_Date'])) ?>
+                                </p>
+                                <a href="course_details.php?name=<?= urlencode($course['Elective_Name']) ?>" 
+                                   class="inline-block mt-3 text-blue-400 hover:text-blue-300">
+                                    View Details →
+                                </a>
+                            </div>
+                        <?php endwhile; ?>
                     </div>
-                    <p class="mt-2 text-center"><?= round($progress, 1) ?>% Complete</p>
+                <?php else: ?>
+                    <div class="bg-gray-800 text-white p-5 rounded-lg shadow-lg">
+                        <p>You haven't enrolled in any courses yet.</p>
+                        <a href="courses.php" class="inline-block mt-3 text-blue-400 hover:text-blue-300">
+                            Browse Available Courses →
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </section>
+
+            <!-- Performance Tracking - Dynamic from database -->
+            <section class="mt-6">
+                <h2 class="text-xl font-semibold mb-3">Performance Tracking</h2>
+                <div class="bg-gray-800 text-white p-5 rounded-lg shadow-lg">
+                    <div class="mb-4">
+                        <p class="mb-2">Your Overall Progress: <strong><?= round($progress, 1) ?>%</strong></p>
+                        <div class="w-full bg-gray-700 rounded-full h-4">
+                            <div class="bg-blue-500 h-4 rounded-full" 
+                                 style="width: <?= min(100, max(0, $progress)) ?>%"></div>
+                        </div>
+                    </div>
+                    <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition">
+                        Download Report (PDF)
+                    </button>
                 </div>
-            </div>
+            </section>
+
+            <!-- AI Recommendations Section -->
+            <section class="mt-6">
+                <h2 class="text-xl font-semibold mb-3">AI Course Recommendations</h2>
+                <div class="bg-gray-800 text-white p-5 rounded-lg shadow-lg">
+                    <p>Based on your interests and past selections, we recommend:</p>
+                    <div class="mt-3 space-y-3">
+                        <div class="p-3 bg-gray-700 rounded-lg hover-scale cursor-pointer">
+                            <strong>Advanced AI & ML</strong> - Dive deeper into machine learning algorithms
+                        </div>
+                        <div class="p-3 bg-gray-700 rounded-lg hover-scale cursor-pointer">
+                            <strong>Cloud Computing</strong> - Learn about AWS, Azure, and GCP
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
 </body>
