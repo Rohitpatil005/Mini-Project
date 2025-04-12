@@ -1,48 +1,42 @@
 <?php
-session_start();
-require_once 'db.php';
+// Database configuration
+$serverName = "localhost";
+$userName = "root";
+$password = "";
+$dbName = "miniproject";
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $student_id = $_POST['student_id'] ?? '';
-    $password = $_POST['password'] ?? '';
+// Establish connection
+$conn = mysqli_connect($serverName, $userName, $password, $dbName);
+
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+// Get form data
+$student_id = $_POST['student_id'] ?? '';
+$input_password = $_POST['password'] ?? '';  // Changed from password_hash for clarity
+
+// Prepare SQL statement with parameterized query to prevent SQL injection
+$sql = "SELECT student_id, password_hash FROM users WHERE student_id = ?";
+$stmt = mysqli_prepare($conn, $sql);
+mysqli_stmt_bind_param($stmt, "s", $student_id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+
+if (mysqli_num_rows($result) == 1) {
+    $row = mysqli_fetch_assoc($result);
     
-    // Check if fields are empty
-    if (empty($student_id) || empty($password)) {
-        $_SESSION['error'] = "Please fill in all fields";
-        header("Location: index.php"); // Redirect back to login page
+    // Verify password (assuming password_hash contains properly hashed passwords)
+    if (password_verify($input_password, $row['password_hash'])) {
+        session_start();
+        $_SESSION['loginUser'] = $student_id;
+        header("Location: dashboard/student_dashboard.php");
         exit();
-    } else {
-        // Prepare the SQL statement
-        $stmt = $conn->prepare("SELECT * FROM users WHERE student_id = ?");
-        if ($stmt === false) {
-            die("Prepare failed: " . $conn->error);
-        }
-        
-        // Bind parameters and execute
-        $stmt->bind_param("s", $student_id);
-        $stmt->execute();
-        
-        // Get result
-        $result = $stmt->get_result();
-        $user = $result->fetch_assoc();
-        
-        if ($user && password_verify($password, $user['password_hash'])) {
-            // Set session variables
-            $_SESSION['user_id'] = $user['user_id'];
-            $_SESSION['name'] = $user['name'];
-            $_SESSION['email'] = $user['email'];
-            $_SESSION['student_id'] = $user['student_id'];
-            $_SESSION['logged_in'] = true;
-            
-            header("Location: student_dashboard.php");
-            exit();
-        } else {
-            $_SESSION['error'] = "Invalid Student ID or Password";
-            header("Location: index.php");
-            exit();
-        }
-        
-        $stmt->close();
     }
 }
+
+// If we get here, login failed
+echo "<script>alert('User ID or Password is incorrect!');</script>";
+header("refresh:0;url=index.php");
+exit();
 ?>

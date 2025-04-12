@@ -193,9 +193,8 @@
                         <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
                     </div>
                 <?php endif; ?>
-                <label for="studentId">Student ID:</label>
-                <input type="text" id="studentId" name="student_id" required>
-                
+                <label for="student_id">Student ID:</label>
+                <input type="text" id="student_id" name="student_id" required>                
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
                 
