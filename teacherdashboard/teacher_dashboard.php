@@ -74,7 +74,7 @@ $assignments = $assignment_stmt->get_result();
             <!-- Header -->
             <header class="flex justify-between items-center bg-white p-4 rounded shadow-md mb-6">
                 <h1 class="text-3xl font-semibold">Welcome, <?= htmlspecialchars($teacher['teacher_Name'] ?? 'Teacher') ?>!</h1>
-                <a href="../index.html">
+                <a href="../index.php">
                     <button class="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700">Logout</button>
                 </a>
             </header>
@@ -83,19 +83,19 @@ $assignments = $assignment_stmt->get_result();
             <section class="mb-6">
                 <h2 class="text-xl font-semibold mb-3">Quick Actions</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <a href="announcement.html">
+                    <a href="announcement.php">
                         <div class="bg-gradient-to-r from-purple-800 to-blue-600 text-white p-5 rounded-lg shadow-lg transition hover:scale-105">
                             <h3 class="text-lg font-semibold">📢 Announcements</h3>
                             <p>Check latest updates</p>
                         </div>
                     </a>
-                    <a href="new_course.html">
+                    <a href="new_course.php">
                         <div class="bg-gradient-to-r from-purple-800 to-blue-600 text-white p-5 rounded-lg shadow-lg transition hover:scale-105">
                             <h3 class="text-lg font-semibold">📜 New Courses</h3>
                             <p>Explore latest additions</p>
                         </div>
                     </a>
-                    <a href="schedule.html">
+                    <a href="schedule.php">
                         <div class="bg-gradient-to-r from-purple-800 to-blue-600 text-white p-5 rounded-lg shadow-lg transition hover:scale-105">
                             <h3 class="text-lg font-semibold">📅 Schedule</h3>
                             <p>View your class timetable</p>

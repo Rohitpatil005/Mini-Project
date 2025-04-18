@@ -25,7 +25,7 @@
            
             <div>
                 <h3 class="text-xl font-semibold mb-3 text-purple-700">🔒 Security & Privacy</h3>
-                <a href="change-password.html" class="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 inline-block">Change Password</a>
+                <a href="change-password.php" class="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 inline-block">Change Password</a>
             </div>
 
            

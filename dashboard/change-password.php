@@ -21,7 +21,7 @@
             
             <button type="submit" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 w-full">Update Password</button>
         </form>
-        <a href="settings.html" class="block text-center text-gray-300 mt-4 hover:underline">Back to Settings</a>
+        <a href="settings.php" class="block text-center text-gray-300 mt-4 hover:underline">Back to Settings</a>
     </div>
 </body>
 </html>

@@ -12,16 +12,16 @@
         <nav class="w-64 bg-gray-800 text-white p-5 shadow-lg">
             <h2 class="text-3xl font-bold mb-5">Course Portal</h2>
             <ul class="space-y-4 text-lg">
-                <li><a href="index.html" class="hover:text-gray-400">🏠 Dashboard</a></li>
-                <li><a href="announcement.html" class="hover:text-gray-400">📢 Announcements</a></li>
-                <li><a href="new_course.html" class="hover:text-gray-400">📜 New Courses</a></li>
+                <li><a href="index.php" class="hover:text-gray-400">🏠 Dashboard</a></li>
+                <li><a href="announcement.php" class="hover:text-gray-400">📢 Announcements</a></li>
+                <li><a href="new_course.php" class="hover:text-gray-400">📜 New Courses</a></li>
             </ul>
         </nav>
 
         <div class="flex-1 p-6">
             <header class="flex justify-between items-center bg-gray-800 p-4 rounded shadow-md">
                 <h1 class="text-white text-3xl font-semibold">📅 Schedule</h1>
-                <a href="index.html" class="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700">Logout</a>
+                <a href="index.php" class="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700">Logout</a>
             </header>
 
             <section class="mt-6">

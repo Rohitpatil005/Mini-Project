@@ -92,13 +92,13 @@
     </div>
 
     <div class="navbar">
-        <div class="logo" onclick="window.location.href='index.html'">MIT-WPU</div>
+        <div class="logo" onclick="window.location.href='index.php'">MIT-WPU</div>
         <div>
-            <a href="index.html">Home</a>
-            <a href="department.html">Department</a>
-            <a href="courses.html">Courses</a>
-            <a href="about.html">Admin Login</a>
-            <a href="teacher_login.html">Teacher Login</a>
+            <a href="index.php">Home</a>
+            <a href="department.php">Department</a>
+            <a href="courses.php">Courses</a>
+            <a href="about.php">Admin Login</a>
+            <a href="teacher_login.php">Teacher Login</a>
         </div>
     </div>
 
