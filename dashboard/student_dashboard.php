@@ -77,7 +77,7 @@ $progress = $progress_result['avg_progress'] ?? 0;
                 <li><a href="student_dashboard.php" class="hover:text-gray-400 flex items-center">🏠 Dashboard</a></li>
                 <li><a href="courses.php" class="hover:text-gray-400 flex items-center">📚 Courses</a></li>
                 <li><a href="my_courses.php" class="hover:text-gray-400 flex items-center">🎓 My Courses</a></li>
-                <li><a href="results.php" class="hover:text-gray-400 flex items-center">📜 Results</a></li>
+                <li><a href="result.php" class="hover:text-gray-400 flex items-center">📜 Results</a></li>
                 <li><a href="settings.php" class="hover:text-gray-400 flex items-center">⚙️ Settings</a></li>
             </ul>
         </nav>
@@ -99,13 +99,13 @@ $progress = $progress_result['avg_progress'] ?? 0;
                 <h2 class="text-xl font-semibold mb-3">Quick Actions</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-gray-800 text-white p-5 rounded-lg shadow-lg hover-scale cursor-pointer">
-                        <a href="announcements.php" class="block">
+                        <a href="announcement.php" class="block">
                             <h3 class="text-lg font-semibold">📢 Announcements</h3>
                             <p>Check latest updates</p>
                         </a>
                     </div>
                     <div class="bg-gray-800 text-white p-5 rounded-lg shadow-lg hover-scale cursor-pointer">
-                        <a href="new_courses.php" class="block">
+                        <a href="new_course.php" class="block">
                             <h3 class="text-lg font-semibold">📜 New Courses</h3>
                             <p>Explore latest additions</p>
                         </a>

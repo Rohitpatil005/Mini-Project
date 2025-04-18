@@ -12,7 +12,7 @@
         <nav class="w-64 bg-gray-800 text-white p-5 shadow-lg">
             <h2 class="text-3xl font-bold mb-5">Course Portal</h2>
             <ul class="space-y-4 text-lg">
-                <li><a href="index.php" class="hover:text-gray-400">🏠 Dashboard</a></li>
+                <li><a href="student_dashboard.php" class="hover:text-gray-400">🏠 Dashboard</a></li>
                 <li><a href="announcement.php" class="hover:text-gray-400">📢 Announcements</a></li>
                 <li><a href="schedule.php" class="hover:text-gray-400">📅 Schedule</a></li>
             </ul>

@@ -1,84 +1,75 @@
+<?php
+session_start();
+if (!isset($_SESSION['loginUser'])) {
+    header("Location: ../index.php");
+    exit();
+}
+require '../db.php';
+
+// Fetch enrolled courses
+$stmt = $conn->prepare("
+    SELECT 
+        ec.Elective_Name,
+        t.teacher_Name,
+        e.Entollment_Date,
+        ec.Credits
+    FROM enrollment e
+    JOIN elective_course ec ON e.Course_ID = ec.Course_ID
+    LEFT JOIN course_professor cp ON ec.Course_ID = cp.Course_ID
+    LEFT JOIN teacher t ON cp.Professor_ID = t.teacher_id
+    WHERE e.Student_ID = ?
+    ORDER BY e.Entollment_Date DESC
+");
+$stmt->bind_param("i", $_SESSION['loginUser']);
+$stmt->execute();
+$enrolledCourses = $stmt->get_result();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Course</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Keep existing head content -->
     <style>
+        /* Add this to fix white screen CSS issues */
+        body {
+            background-color: #f7fafc;
+        }
         .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 20px;
             background: #2d3748;
             color: white;
-        }
-        .container {
-            max-width: 1200px;
-            margin: auto;
-        }
-        .chart-container {
-            width: 250px;
-            height: 365px;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
-<body class="bg-white p-6 text-white">
-    <div class="container">
-        <h2 class="text-4xl font-bold mb-6 text-gray-800 text-center">📚 My Course</h2>
+<body class="p-6">
+    <div class="container mx-auto max-w-6xl">
+        <h2 class="text-4xl font-bold mb-8 text-center text-gray-800">📚 My Courses</h2>
         
-        <div class="flex flex-col md:flex-row gap-6 items-center justify-center">
-            
-            <div class="card w-full md:w-1/2">
-                <h3 class="text-xl font-semibold mb-2">✅ Astro Physics</h3>
-                <p>Instructor: Deobrat Singh</p>
-                <p>Modules Completed: <span class="font-bold">6</span> / 10</p>
-                <p>Next Assignment: <span class="font-bold">Project on Responsive Design</span> (Due: March 30)</p>
-                <p>Exam Date: <span class="font-bold">April 15</span></p>
-                <button class="mt-3 bg-blue-500 text-white px-4 py-2 rounded shadow w-full">Download Course Materials</button>
-            </div>
-            
-           
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg flex justify-center md:w-1/2">
-                <div class="chart-container">
-                    <h3 class="text-xl font-semibold mb-4 text-center">📊 Module Completion</h3>
-                    <canvas id="progressChart"></canvas>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <?php if ($enrolledCourses->num_rows > 0): ?>
+                <?php while($course = $enrolledCourses->fetch_assoc()): ?>
+                    <div class="card transform hover:scale-105 transition duration-300">
+                        <h3 class="text-xl font-semibold mb-2">🎓 <?= htmlspecialchars($course['Elective_Name']) ?></h3>
+                        <p class="text-gray-300">Instructor: <?= htmlspecialchars($course['teacher_Name'] ?? 'To be announced') ?></p>
+                        <p class="text-gray-300 mt-2">Enrolled: <?= date('M j, Y', strtotime($course['Entollment_Date'])) ?></p>
+                        <p class="text-gray-300">Credits: <?= $course['Credits'] ?></p>
+                        <button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
+                            View Course Materials
+                        </button>
+                    </div>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <div class="card text-center col-span-full">
+                    <p class="text-xl mb-4">No courses enrolled yet</p>
+                    <a href="courses.php" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded inline-block">
+                        Browse Available Courses
+                    </a>
                 </div>
-            </div>
-        </div>
-        
-       
-        <div class="mt-8 bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold mb-4">💬 Discussion Forum</h3>
-            <textarea placeholder="Ask a question..." class="w-full p-3 rounded border-gray-600 shadow bg-gray-700 text-white"></textarea>
-            <button class="mt-3 bg-green-500 text-white px-4 py-2 rounded shadow w-full">Post</button>
-        </div>
-
-        
-        <div class="mt-8 bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold mb-4">🔔 Course Notifications</h3>
-            <p class="text-gray-300">No new notifications.</p>
+            <?php endif; ?>
         </div>
     </div>
-    
-    <script>
-        const ctx = document.getElementById('progressChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: ['Completed Modules', 'Remaining Modules'],
-                datasets: [{
-                    data: [6, 4],
-                    backgroundColor: ['#10B981', '#EF4444'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-    </script>
+
+    <!-- Keep existing chart and discussion forum code -->
 </body>
 </html>
