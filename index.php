@@ -176,7 +176,7 @@
         <div class="logo" onclick="window.location.href='index.php'"><img src="MIT-WPU_LOGO.webp" width="200" height="60"></div>
         <div>
             <a href="index.php">Home</a>
-            <a href="teacher_login.php">Teacher Login</a>
+            <a href="teacherindex.php">Teacher Login</a>
         </div>
     </div>
 

@@ -1,164 +1,48 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 session_start();
-require_once '../config/db.php';
+$conn = mysqli_connect("localhost", "root", "", "miniproject");
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $professor_id = $_POST['professor_id'];
-    $password = $_POST['password'];
+if (!$conn) die("Connection failed: " . mysqli_connect_error());
 
-    $sql = "SELECT * FROM professor WHERE Professor_ID = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $professor_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $professor = $result->fetch_assoc();
+$teacher_id = mysqli_real_escape_string($conn, $_POST['teacher_id']);
+$input_password = $_POST['password'];
 
-    if ($professor && $professor['Password'] === $password) {
-        $_SESSION['user_role'] = 'teacher';
-        $_SESSION['professor_id'] = $professor_id;
-        echo json_encode(["status" => "success", "message" => "Login successful"]);
-    } else {
-        echo json_encode(["status" => "error", "message" => "Invalid credentials"]);
+// Debug output (remove in production)
+echo "Trying to login with:<br>";
+echo "teacher ID: $teacher_id<br>";
+echo "Password: $input_password<br>";
+
+$stmt = mysqli_prepare($conn, "SELECT teacher_id, password_hash FROM teacher WHERE teacher_id = ?");
+mysqli_stmt_bind_param($stmt, "s", $teacher_id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+
+if (mysqli_num_rows($result) === 1) {
+    $row = mysqli_fetch_assoc($result);
+    
+    // Debug output
+    echo "<br>Database record found:<br>";
+    print_r($row);
+    
+    // First try direct comparison (if passwords aren't hashed)
+    if ($input_password === $row['password_hash']) {
+        $_SESSION['loginUser'] = $teacher_id;
+        header("Location: teacherdashboard/teacher_dashboard.php");
+        exit();
+    }
+    // Then try password_verify (if passwords are hashed)
+    elseif (password_verify($input_password, $row['password_hash'])) {
+        $_SESSION['loginUser'] = $teacher_id;
+        header("Location: teacherdashboard/teacher_dashboard.php");
+        exit();
+    }
+    else {
+        echo "<br>Password comparison failed!";
     }
 }
+
+echo "<script>alert('Invalid credentials'); window.location.href='index.php';</script>";
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Login</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            color: white;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        
-        .video-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: -1;
-        }
-
-        .video-container video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 10px 20px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            margin-left: 20px;
-        }
-
-        .navbar a:hover {
-            text-decoration: underline;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .main-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: calc(100vh - 60px);
-            position: relative;
-            z-index: 2;
-        }
-
-        #loginForm {
-            width: 400px;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-        }
-
-        #loginForm > input, #loginForm > label {
-            margin-bottom: 15px;
-            width: 100%;
-        }
-
-        #loginForm > input[type="text"], #loginForm > input[type="password"] {
-            height: 35px;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-
-        #loginForm > input[type="submit"] {
-            background-color: #371ec4;
-            color: black;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            height: 40px;
-            width: 100%;
-        }
-
-        #loginForm > input[type="submit"]:hover {
-            background-color: #1b1bd8;
-        }
-    </style>
-</head>
-<body>
-
-    
-    <div class="video-container">
-        <video autoplay loop muted>
-            <source src="banner_video_desktop.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    </div>
-
-    <div class="navbar">
-        <div class="logo" onclick="window.location.href='index.html'">,<img src="MIT-WPU_LOGO.webp" alt="width="200" height="60""></div>
-        <div>
-            <a href="index.html">Home</a>
-            <a href="index.html">Student Login</a>
-        </div>
-    </div>
-
-    <div class="main-container">
-        <form id="loginForm" action="teacherdashboard/index.html" method="get">
-            <h2>Teacher Log In</h2>
-            <label for="teacherId">Teacher ID:</label>
-            <input type="text" id="teacherId" name="teacherId" required>
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-            <input type="submit" value="Submit">
-            <div class="forgot-password">
-                <a href="forgot_password.html">Forgot Password?</a>
-            </div>
-        </form>
-    </div>
-
-</body>
-</html>
