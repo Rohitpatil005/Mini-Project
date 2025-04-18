@@ -128,7 +128,7 @@ $progress = $progress_result['avg_progress'] ?? 0;
                             <?php while ($announcement = $announcements->fetch_assoc()): ?>
                                 <div class="border-b border-gray-700 pb-3 last:border-0 last:pb-0">
                                     <h3 class="font-semibold text-lg"><?= htmlspecialchars($announcement['title']) ?></h3>
-                                    <p class="text-gray-300"><?= htmlspecialchars($announcement['content']) ?></p>
+                                    <p class="text-gray-300"><?= htmlspecialchars($announcement['description']) ?></p>
                                     <p class="text-sm text-gray-400 mt-1">
                                         Posted: <?= date('M j, Y', strtotime($announcement['created_at'])) ?>
                                         <?php if ($announcement['expiry_date']): ?>
