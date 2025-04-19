@@ -1,3 +1,81 @@
+<?php
+session_start();
+require '../db.php';
+
+if (!isset($_SESSION['loginUser'])) {
+    header("Location: ../teacherindex.php");
+    exit();
+}
+
+// Fetch teacher's courses
+$courses_stmt = $conn->prepare("SELECT course_id FROM elective_course WHERE assigned_teacher = ?");
+$courses_stmt->bind_param("s", $_SESSION['loginUser']);
+$courses_stmt->execute();
+$teacher_courses = $courses_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+// Fetch questions for teacher's courses
+$course_ids = array_column($teacher_courses, 'course_id');
+$placeholders = implode(',', array_fill(0, count($course_ids), '?'));
+$question_stmt = $conn->prepare("
+    SELECT q.*, ec.elective_name 
+    FROM questions q
+    JOIN elective_course ec ON q.course_id = ec.Course_ID
+    WHERE q.course_id IN ($placeholders)
+");
+$question_stmt->bind_param(str_repeat('i', count($course_ids)), ...$course_ids);
+$question_stmt->execute();
+$questions = $question_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+// Handle replies
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply'])) {
+    $reply = $_POST['reply'];
+    $question_id = $_POST['question_id'];
+    
+    $stmt = $conn->prepare("INSERT INTO replies (question_id, teacher_id, reply) VALUES (?, ?, ?)");
+    $stmt->bind_param("iss", $question_id, $_SESSION['loginUser'], $reply);
+    $stmt->execute();
+}
+?>
+
+<!-- In the Student Queries section -->
+<div class="mt-8 card">
+    <h3 class="text-xl font-semibold mb-4 text-purple-700">💬 Student Queries</h3>
+    
+    <?php foreach ($questions as $q): ?>
+    <div class="mb-4 p-4 bg-gray-100 rounded">
+        <p class="font-semibold"><?= $q['elective_name'] ?></p>
+        <p class="text-gray-800"><?= htmlspecialchars($q['question']) ?></p>
+        <small class="text-gray-600">Asked by <?= $q['student_id'] ?> on <?= date('M j, Y', strtotime($q['created_at'])) ?></small>
+        
+        <!-- Replies -->
+        <?php 
+        $reply_stmt = $conn->prepare("SELECT * FROM replies WHERE question_id = ?");
+        $reply_stmt->bind_param("i", $q['question_id']);
+        $reply_stmt->execute();
+        $replies = $reply_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        ?>
+        
+        <?php foreach ($replies as $r): ?>
+        <div class="ml-4 mt-2 p-2 bg-blue-100 rounded">
+            <p class="text-gray-800"><?= htmlspecialchars($r['reply']) ?></p>
+            <small class="text-gray-600">Replied by Teacher on <?= date('M j, Y', strtotime($r['created_at'])) ?></small>
+        </div>
+        <?php endforeach; ?>
+
+        <!-- Reply Form -->
+        <form method="POST" class="mt-2">
+            <input type="hidden" name="question_id" value="<?= $q['question_id'] ?>">
+            <textarea name="reply" placeholder="Write your reply..." 
+                      class="w-full p-2 rounded border-gray-300 shadow text-black"
+                      required></textarea>
+            <button type="submit" 
+                    class="mt-2 bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+                Post Reply
+            </button>
+        </form>
+    </div>
+    <?php endforeach; ?>
+</div>
 <!DOCTYPE html>
 <html lang="en">
 <head>
