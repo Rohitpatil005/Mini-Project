@@ -63,8 +63,8 @@ $assignments = $assignment_stmt->get_result();
             <ul class="space-y-4 text-lg">
                 <li><a href="teacher_dashboard.php" class="hover:text-gray-300">🏠 Dashboard</a></li>
                 <li><a href="coursemanagement.php" class="hover:text-gray-300">📚 Course Management</a></li>
-                <li><a href="student_interaction.php" class="hover:text-gray-300">🎓 Student Interaction</a></li>
-                <li><a href="grading.php" class="hover:text-gray-300">📝 Grading</a></li>
+                <li><a href="Student_Interaction.php" class="hover:text-gray-300">🎓 Student Interaction</a></li>
+                <li><a href="Grade&Assesment.php" class="hover:text-gray-300">📝 Grading</a></li>
                 <li><a href="settings.php" class="hover:text-gray-300">⚙️ Settings</a></li>
             </ul>
         </nav>
@@ -183,8 +183,8 @@ $assignments = $assignment_stmt->get_result();
             <section>
                 <h2 class="text-xl font-semibold mb-3">🔗 Quick Links</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <a href="reports.html" class="bg-blue-500 text-white p-4 rounded-lg shadow-lg text-center">📊 View Reports</a>
-                    <a href="support.html" class="bg-green-500 text-white p-4 rounded-lg shadow-lg text-center">💬 Support & Help</a>
+                    <a href="reports.php" class="bg-blue-500 text-white p-4 rounded-lg shadow-lg text-center">📊 View Reports</a>
+                    <a href="support.php" class="bg-green-500 text-white p-4 rounded-lg shadow-lg text-center">💬 Support & Help</a>
                 </div>
             </section>
         </div>
