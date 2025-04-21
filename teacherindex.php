@@ -118,7 +118,7 @@
         <div class="logo" onclick="window.location.href='index.php'">,<img src="MIT-WPU_LOGO.webp" alt="width="200" height="60""></div>
         <div>
             <a href="index.php">Home</a>
-            <a href="index.php">teacher Login</a>
+            <a href="index.php">Student Login</a>
         </div>
     </div>
 

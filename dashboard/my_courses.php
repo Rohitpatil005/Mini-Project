@@ -78,7 +78,7 @@ if ($enrolledCourses->num_rows > 0) {
     <title>My Courses</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #f7fafc; }
+        body { background-color: #1a202c; }
         .card {
             background: #2d3748;
             color: white;
@@ -90,7 +90,7 @@ if ($enrolledCourses->num_rows > 0) {
 </head>
 <body class="p-6">
     <div class="container mx-auto max-w-6xl">
-        <h2 class="text-4xl font-bold mb-8 text-center text-gray-800">📚 My Courses</h2>
+        <h2 class="text-4xl font-bold mb-8 text-center text-white">📚 My Courses</h2>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <?php if ($enrolledCourses->num_rows > 0): ?>
@@ -108,7 +108,7 @@ if ($enrolledCourses->num_rows > 0) {
 
                         <!-- Discussion Forum Section -->
                         <div class="mt-4 bg-gray-800 p-6 rounded-lg shadow-lg">
-                            <h3 class="text-xl font-semibold mb-4">💬 Discussion Forum</h3>
+                            <h3 class="text-white text-xl font-semibold mb-2">💬 Discussion Forum</h3>
                             
                             <!-- Existing Questions -->
                             <?php if (!empty($questions[$course['Course_ID']])): ?>
