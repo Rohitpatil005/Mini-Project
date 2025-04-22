@@ -82,7 +82,7 @@ $assignments = $assignment_stmt->get_result();
             <!-- Quick Actions -->
             <section class="mb-6">
                 <h2 class="text-xl font-semibold mb-3">Quick Actions</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <a href="announcement.php">
                         <div class="bg-gradient-to-r from-purple-800 to-blue-600 text-white p-5 rounded-lg shadow-lg transition hover:scale-105">
                             <h3 class="text-lg font-semibold">📢 Announcements</h3>
@@ -99,6 +99,12 @@ $assignments = $assignment_stmt->get_result();
                         <div class="bg-gradient-to-r from-purple-800 to-blue-600 text-white p-5 rounded-lg shadow-lg transition hover:scale-105">
                             <h3 class="text-lg font-semibold">📅 Schedule</h3>
                             <p>View your class timetable</p>
+                        </div>
+                    </a>
+                    <a href="Grade&Assesment.php">
+                        <div class="bg-gradient-to-r from-purple-800 to-blue-600 text-white p-5 rounded-lg shadow-lg transition hover:scale-105">
+                            <h3 class="text-lg font-semibold">📝 Grade Management</h3>
+                            <p>View and update student grades</p>
                         </div>
                     </a>
                 </div>
@@ -191,4 +197,3 @@ $assignments = $assignment_stmt->get_result();
     </div>
 </body>
 </html>
-
