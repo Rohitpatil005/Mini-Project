@@ -1,28 +1,11 @@
--- MySQL dump 10.13  Distrib 8.0.41, for Win64 (x86_64)
---
--- Host: localhost    Database: miniproject
--- ------------------------------------------------------
--- Server version	8.0.41
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8mb4 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
 -- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Apr 18, 2025 at 05:29 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Host: 127.0.0.1:3306
+-- Generation Time: Apr 21, 2025 at 08:02 PM
+-- Server version: 9.1.0
+-- PHP Version: 8.4.0
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -37,6 +20,91 @@ SET time_zone = "+00:00";
 --
 -- Database: `miniproject`
 --
+CREATE DATABASE IF NOT EXISTS `miniproject` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE `miniproject`;
+
+DELIMITER $$
+--
+-- Procedures
+--
+DROP PROCEDURE IF EXISTS `AddResult`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddResult` (IN `p_student_id` INT, IN `p_course_id` VARCHAR(20), IN `p_instructor_id` INT, IN `p_final_grade` VARCHAR(2), IN `p_percentage` DECIMAL(5,2))   BEGIN
+    INSERT INTO results (student_id, course_id, instructor_id, final_grade, percentage)
+    VALUES (p_student_id, p_course_id, p_instructor_id, p_final_grade, p_percentage);
+END$$
+
+DROP PROCEDURE IF EXISTS `GenerateStudentReport`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GenerateStudentReport` (IN `p_student_id` INT)   BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE course_id_val VARCHAR(20);
+    DECLARE grade_val VARCHAR(2);
+    DECLARE percent_val DECIMAL(5,2);
+
+    DECLARE cur CURSOR FOR
+        SELECT course_id, final_grade, percentage
+        FROM results
+        WHERE student_id = p_student_id;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO course_id_val, grade_val, percent_val;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        SELECT CONCAT('Course ID: ', course_id_val, ' | Grade: ', grade_val, ' | Percentage: ', percent_val) AS Report;
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+--
+-- Functions
+--
+DROP FUNCTION IF EXISTS `CalculateGPA`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `CalculateGPA` (`p_student_id` INT) RETURNS DECIMAL(4,2) DETERMINISTIC BEGIN
+    DECLARE total_points INT DEFAULT 0;
+    DECLARE course_count INT DEFAULT 0;
+    DECLARE grade VARCHAR(2);
+    DECLARE done INT DEFAULT FALSE;
+
+    -- Move cursor and handler declarations below variables
+    DECLARE cur CURSOR FOR
+        SELECT final_grade FROM results WHERE student_id = p_student_id;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO grade;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SET course_count = course_count + 1;
+
+        CASE grade
+            WHEN 'A+' THEN SET total_points = total_points + 10;
+            WHEN 'A'  THEN SET total_points = total_points + 9;
+            WHEN 'B'  THEN SET total_points = total_points + 8;
+            WHEN 'C'  THEN SET total_points = total_points + 7;
+            ELSE SET total_points = total_points + 0;
+        END CASE;
+    END LOOP;
+
+    CLOSE cur;
+
+    IF course_count = 0 THEN
+        RETURN 0;
+    ELSE
+        RETURN total_points / course_count;
+    END IF;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -44,14 +112,18 @@ SET time_zone = "+00:00";
 -- Table structure for table `announcements`
 --
 
-CREATE TABLE `announcements` (
-  `announcement_id` int(11) NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `description` varchar(500) NOT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
+DROP TABLE IF EXISTS `announcements`;
+CREATE TABLE IF NOT EXISTS `announcements` (
+  `announcement_id` int NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `description` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `expiry_date` date DEFAULT NULL,
-  `teacher_id` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `posted_by` int NOT NULL,
+  `teacher_id` int DEFAULT NULL,
+  PRIMARY KEY (`announcement_id`),
+  KEY `announcement_ibfk_1` (`teacher_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `announcements`
@@ -67,18 +139,35 @@ INSERT INTO `announcements` (`announcement_id`, `title`, `description`, `created
 (12, 'Hello', 'Testing', '2025-04-18 15:19:56', '2025-04-19', 101, NULL),
 (13, 'CCA MARKS Announcement', 'CCA MARKS ARE UPLOADED ON LMS.', '2025-04-18 15:22:12', '2025-04-30', 101, NULL);
 
+--
+-- Triggers `announcements`
+--
+DROP TRIGGER IF EXISTS `validate_expiry_date`;
+DELIMITER $$
+CREATE TRIGGER `validate_expiry_date` BEFORE INSERT ON `announcements` FOR EACH ROW BEGIN
+    IF NEW.expiry_date <= CURDATE() THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Expiry date must be a future date.';
+    END IF;
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `assignment`
 --
 
-CREATE TABLE `assignment` (
-  `Assessment_ID` int(11) NOT NULL,
-  `Type` varchar(50) DEFAULT NULL,
-  `Course_ID` varchar(20) DEFAULT NULL,
-  `Max_Marks` int(11) DEFAULT NULL,
-  `Weightage` int(11) DEFAULT NULL
+DROP TABLE IF EXISTS `assignment`;
+CREATE TABLE IF NOT EXISTS `assignment` (
+  `Assessment_ID` int NOT NULL,
+  `Type` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Course_ID` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Max_Marks` int DEFAULT NULL,
+  `Weightage` int DEFAULT NULL,
+  PRIMARY KEY (`Assessment_ID`),
+  KEY `assessment_ibfk_1` (`Course_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -98,9 +187,11 @@ INSERT INTO `assignment` (`Assessment_ID`, `Type`, `Course_ID`, `Max_Marks`, `We
 -- Table structure for table `core_elective`
 --
 
-CREATE TABLE `core_elective` (
-  `Core_Type` int(11) DEFAULT NULL,
-  `Course_ID` varchar(20) DEFAULT NULL
+DROP TABLE IF EXISTS `core_elective`;
+CREATE TABLE IF NOT EXISTS `core_elective` (
+  `Core_Type` int DEFAULT NULL,
+  `Course_ID` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  KEY `core_elective_ibfk_1` (`Course_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -109,9 +200,12 @@ CREATE TABLE `core_elective` (
 -- Table structure for table `course_mode`
 --
 
-CREATE TABLE `course_mode` (
-  `Course_ID` varchar(10) NOT NULL,
-  `Mode_ID` int(11) DEFAULT NULL
+DROP TABLE IF EXISTS `course_mode`;
+CREATE TABLE IF NOT EXISTS `course_mode` (
+  `Course_ID` varchar(10) COLLATE utf8mb4_general_ci NOT NULL,
+  `Mode_ID` int DEFAULT NULL,
+  PRIMARY KEY (`Course_ID`),
+  KEY `Mode_ID` (`Mode_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -151,9 +245,12 @@ INSERT INTO `course_mode` (`Course_ID`, `Mode_ID`) VALUES
 -- Table structure for table `course_professor`
 --
 
-CREATE TABLE `course_professor` (
-  `Course_ID` varchar(10) NOT NULL,
-  `Professor_ID` int(11) NOT NULL
+DROP TABLE IF EXISTS `course_professor`;
+CREATE TABLE IF NOT EXISTS `course_professor` (
+  `Course_ID` varchar(10) COLLATE utf8mb4_general_ci NOT NULL,
+  `Professor_ID` int NOT NULL,
+  PRIMARY KEY (`Course_ID`,`Professor_ID`),
+  KEY `Professor_ID` (`Professor_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -161,31 +258,31 @@ CREATE TABLE `course_professor` (
 --
 
 INSERT INTO `course_professor` (`Course_ID`, `Professor_ID`) VALUES
+('RCS2UE03A', 101),
+('RCS2UE04A', 102),
+('RCS2UE02A', 103),
 ('BBA2UE03A', 104),
 ('BBA2UE05A', 104),
 ('BBA2UE06A', 105),
-('CET2UE01A', 108),
-('COM2UE01A', 115),
-('COM2UE02A', 116),
-('COM2UE04A', 117),
-('CSA2UE03A', 110),
-('CSA2UE05A', 111),
-('CSA2UE17A', 112),
+('HHA2UE02A', 105),
 ('CSE2UE01A', 106),
 ('CSE2UE02A', 107),
+('HHA2UE04A', 107),
+('CET2UE01A', 108),
 ('CSE2UE03A', 108),
-('CSE2UE05A', 111),
+('CSA2UE03A', 110),
 ('CSE2UE06A', 110),
+('CSA2UE05A', 111),
+('CSE2UE05A', 111),
+('CSA2UE17A', 112),
 ('DES2UE02A', 112),
 ('DES2UE03A', 113),
-('ECO2UE01A', 117),
-('ECO2UE03A', 115),
-('HHA2UE02A', 105),
-('HHA2UE04A', 107),
 ('PPL2UE01A', 114),
-('RCS2UE02A', 103),
-('RCS2UE03A', 101),
-('RCS2UE04A', 102);
+('COM2UE01A', 115),
+('ECO2UE03A', 115),
+('COM2UE02A', 116),
+('COM2UE04A', 117),
+('ECO2UE01A', 117);
 
 -- --------------------------------------------------------
 
@@ -193,9 +290,11 @@ INSERT INTO `course_professor` (`Course_ID`, `Professor_ID`) VALUES
 -- Table structure for table `department`
 --
 
-CREATE TABLE `department` (
-  `Department_ID` int(11) NOT NULL,
-  `Department_Name` varchar(100) DEFAULT NULL
+DROP TABLE IF EXISTS `department`;
+CREATE TABLE IF NOT EXISTS `department` (
+  `Department_ID` int NOT NULL,
+  `Department_Name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  PRIMARY KEY (`Department_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -249,9 +348,12 @@ INSERT INTO `department` (`Department_ID`, `Department_Name`) VALUES
 -- Table structure for table `department_professor`
 --
 
-CREATE TABLE `department_professor` (
-  `Professor_ID` int(11) NOT NULL,
-  `Department_ID` int(11) NOT NULL
+DROP TABLE IF EXISTS `department_professor`;
+CREATE TABLE IF NOT EXISTS `department_professor` (
+  `Professor_ID` int NOT NULL,
+  `Department_ID` int NOT NULL,
+  PRIMARY KEY (`Professor_ID`,`Department_ID`),
+  KEY `Department_ID` (`Department_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -273,9 +375,9 @@ INSERT INTO `department_professor` (`Professor_ID`, `Department_ID`) VALUES
 (112, 5),
 (113, 6),
 (114, 7),
+(117, 7),
 (115, 8),
-(116, 8),
-(117, 7);
+(116, 8);
 
 -- --------------------------------------------------------
 
@@ -283,13 +385,17 @@ INSERT INTO `department_professor` (`Professor_ID`, `Department_ID`) VALUES
 -- Table structure for table `discussions`
 --
 
-CREATE TABLE `discussions` (
-  `discussion_id` int(11) NOT NULL,
-  `course_id` varchar(50) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `message` varchar(500) NOT NULL,
-  `posted_at` timestamp NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `discussions`;
+CREATE TABLE IF NOT EXISTS `discussions` (
+  `discussion_id` int NOT NULL AUTO_INCREMENT,
+  `course_id` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `user_id` int NOT NULL,
+  `message` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `posted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`discussion_id`),
+  KEY `course_id` (`course_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `discussions`
@@ -307,10 +413,12 @@ INSERT INTO `discussions` (`discussion_id`, `course_id`, `user_id`, `message`, `
 -- Table structure for table `elective_category`
 --
 
-CREATE TABLE `elective_category` (
-  `Category_ID` int(11) NOT NULL,
-  `Elective_Name` varchar(50) DEFAULT NULL,
-  `Description` varchar(200) DEFAULT NULL
+DROP TABLE IF EXISTS `elective_category`;
+CREATE TABLE IF NOT EXISTS `elective_category` (
+  `Category_ID` int NOT NULL,
+  `Elective_Name` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Description` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  PRIMARY KEY (`Category_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -319,12 +427,16 @@ CREATE TABLE `elective_category` (
 -- Table structure for table `elective_course`
 --
 
-CREATE TABLE `elective_course` (
-  `Course_ID` varchar(50) NOT NULL,
-  `Elective_Name` varchar(100) DEFAULT NULL,
-  `Credits` int(11) DEFAULT NULL,
-  `Department_ID` int(11) DEFAULT NULL,
-  `assigned_teacher` int(11) DEFAULT NULL
+DROP TABLE IF EXISTS `elective_course`;
+CREATE TABLE IF NOT EXISTS `elective_course` (
+  `Course_ID` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `Elective_Name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Credits` int DEFAULT NULL,
+  `Department_ID` int DEFAULT NULL,
+  `assigned_teacher` int DEFAULT NULL,
+  PRIMARY KEY (`Course_ID`),
+  KEY `Department_ID` (`Department_ID`),
+  KEY `fk_assigned_teacher` (`assigned_teacher`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -364,11 +476,14 @@ INSERT INTO `elective_course` (`Course_ID`, `Elective_Name`, `Credits`, `Departm
 -- Table structure for table `enrollment`
 --
 
-CREATE TABLE `enrollment` (
+DROP TABLE IF EXISTS `enrollment`;
+CREATE TABLE IF NOT EXISTS `enrollment` (
   `Entollment_Date` date DEFAULT NULL,
   `Status` tinyint(1) DEFAULT NULL,
-  `Course_ID` varchar(20) DEFAULT NULL,
-  `Student_ID` int(11) DEFAULT NULL
+  `Course_ID` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Student_ID` int DEFAULT NULL,
+  KEY `Student_ID` (`Student_ID`),
+  KEY `enrollment_ibfk_1` (`Course_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -396,7 +511,18 @@ INSERT INTO `enrollment` (`Entollment_Date`, `Status`, `Course_ID`, `Student_ID`
 ('2024-03-18', 1, 'ECO2UE01A', 1018),
 ('2024-03-19', 1, 'ECO2UE03A', 1019),
 ('2024-03-20', 1, 'HHA2UE02A', 1020),
-('2024-03-21', 1, 'HHA2UE04A', 1021);
+('2024-03-21', 1, 'HHA2UE04A', 1021),
+('2025-04-18', 1, NULL, 1001),
+('2025-04-18', 1, NULL, 1001),
+('2025-04-18', 1, NULL, 1001),
+('2025-04-18', 1, NULL, 1001),
+('2025-04-18', 1, NULL, 1001),
+('2025-04-18', 1, NULL, 1001),
+('2025-04-18', 1, NULL, 1001),
+('2025-04-18', 1, NULL, 1001),
+('2025-04-18', 1, NULL, 1001),
+('2025-04-18', 1, NULL, 1001),
+('2025-04-18', 1, 'COM2UE01A', 1001);
 
 -- --------------------------------------------------------
 
@@ -404,14 +530,18 @@ INSERT INTO `enrollment` (`Entollment_Date`, `Status`, `Course_ID`, `Student_ID`
 -- Table structure for table `feedback`
 --
 
-CREATE TABLE `feedback` (
-  `feedback_id` int(11) NOT NULL,
-  `student_id` int(11) NOT NULL,
+DROP TABLE IF EXISTS `feedback`;
+CREATE TABLE IF NOT EXISTS `feedback` (
+  `feedback_id` int NOT NULL AUTO_INCREMENT,
+  `student_id` int NOT NULL,
   `course_id` varchar(50) NOT NULL,
-  `rating` int(11) DEFAULT NULL,
+  `rating` int DEFAULT NULL,
   `comments` varchar(250) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp()
-) ;
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`feedback_id`),
+  KEY `student_id` (`student_id`),
+  KEY `course_id` (`course_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `feedback`
@@ -430,10 +560,12 @@ INSERT INTO `feedback` (`feedback_id`, `student_id`, `course_id`, `rating`, `com
 -- Table structure for table `location`
 --
 
-CREATE TABLE `location` (
-  `Location_ID` int(11) NOT NULL,
-  `Location_Name` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `location`;
+CREATE TABLE IF NOT EXISTS `location` (
+  `Location_ID` int NOT NULL AUTO_INCREMENT,
+  `Location_Name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  PRIMARY KEY (`Location_ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `location`
@@ -450,10 +582,13 @@ INSERT INTO `location` (`Location_ID`, `Location_Name`) VALUES
 -- Table structure for table `mode`
 --
 
-CREATE TABLE `mode` (
-  `Mode_ID` int(11) NOT NULL,
-  `Mode_Type` varchar(50) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `mode`;
+CREATE TABLE IF NOT EXISTS `mode` (
+  `Mode_ID` int NOT NULL AUTO_INCREMENT,
+  `Mode_Type` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  PRIMARY KEY (`Mode_ID`),
+  UNIQUE KEY `Mode_Type` (`Mode_Type`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `mode`
@@ -470,13 +605,16 @@ INSERT INTO `mode` (`Mode_ID`, `Mode_Type`) VALUES
 -- Table structure for table `notifications`
 --
 
-CREATE TABLE `notifications` (
-  `notification_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `message` text NOT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `is_read` tinyint(1) DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `notifications`;
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `notification_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `message` text COLLATE utf8mb4_general_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_read` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`notification_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `notifications`
@@ -496,9 +634,11 @@ INSERT INTO `notifications` (`notification_id`, `user_id`, `message`, `created_a
 -- Table structure for table `open_elective`
 --
 
-CREATE TABLE `open_elective` (
-  `Open_Field` int(11) DEFAULT NULL,
-  `Course_ID` varchar(20) DEFAULT NULL
+DROP TABLE IF EXISTS `open_elective`;
+CREATE TABLE IF NOT EXISTS `open_elective` (
+  `Open_Field` int DEFAULT NULL,
+  `Course_ID` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  KEY `open_elective_ibfk_1` (`Course_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -507,10 +647,48 @@ CREATE TABLE `open_elective` (
 -- Table structure for table `practical_assessment`
 --
 
-CREATE TABLE `practical_assessment` (
-  `Assessment_ID` int(11) DEFAULT NULL,
-  `Assessment_Name` varchar(50) DEFAULT NULL
+DROP TABLE IF EXISTS `practical_assessment`;
+CREATE TABLE IF NOT EXISTS `practical_assessment` (
+  `Assessment_ID` int DEFAULT NULL,
+  `Assessment_Name` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  KEY `Assessment_ID` (`Assessment_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `questions`
+--
+
+DROP TABLE IF EXISTS `questions`;
+CREATE TABLE IF NOT EXISTS `questions` (
+  `question_id` int NOT NULL AUTO_INCREMENT,
+  `Course_ID` varchar(20) NOT NULL,
+  `Student_ID` int NOT NULL,
+  `question` text NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`question_id`),
+  KEY `Course_ID` (`Course_ID`),
+  KEY `Student_ID` (`Student_ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `replies`
+--
+
+DROP TABLE IF EXISTS `replies`;
+CREATE TABLE IF NOT EXISTS `replies` (
+  `reply_id` int NOT NULL AUTO_INCREMENT,
+  `question_id` int NOT NULL,
+  `teacher_id` int NOT NULL,
+  `reply` text NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`reply_id`),
+  KEY `question_id` (`question_id`),
+  KEY `teacher_id` (`teacher_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -518,14 +696,17 @@ CREATE TABLE `practical_assessment` (
 -- Table structure for table `reports`
 --
 
-CREATE TABLE `reports` (
-  `report_id` int(11) NOT NULL,
-  `report_type` enum('Course Report','Student Progress','Attendance Report','Grade Distribution','Performance Analytics') NOT NULL,
-  `description` varchar(500) NOT NULL,
-  `generated_by` int(11) NOT NULL,
-  `generated_at` timestamp NULL DEFAULT current_timestamp(),
-  `file_path` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `reports`;
+CREATE TABLE IF NOT EXISTS `reports` (
+  `report_id` int NOT NULL AUTO_INCREMENT,
+  `report_type` enum('Course Report','Student Progress','Attendance Report','Grade Distribution','Performance Analytics') COLLATE utf8mb4_general_ci NOT NULL,
+  `description` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `generated_by` int NOT NULL,
+  `generated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `file_path` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  PRIMARY KEY (`report_id`),
+  KEY `generated_by` (`generated_by`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `reports`
@@ -542,15 +723,20 @@ INSERT INTO `reports` (`report_id`, `report_type`, `description`, `generated_by`
 -- Table structure for table `results`
 --
 
-CREATE TABLE `results` (
-  `result_id` int(11) NOT NULL,
-  `student_id` int(11) NOT NULL,
-  `course_id` varchar(20) NOT NULL,
-  `instructor_id` int(11) NOT NULL,
-  `final_grade` varchar(2) NOT NULL,
+DROP TABLE IF EXISTS `results`;
+CREATE TABLE IF NOT EXISTS `results` (
+  `result_id` int NOT NULL AUTO_INCREMENT,
+  `student_id` int NOT NULL,
+  `course_id` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `instructor_id` int NOT NULL,
+  `final_grade` varchar(2) COLLATE utf8mb4_general_ci NOT NULL,
   `percentage` decimal(5,2) NOT NULL,
-  `remarks` varchar(200) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `remarks` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  PRIMARY KEY (`result_id`),
+  KEY `student_id` (`student_id`),
+  KEY `course_id` (`course_id`),
+  KEY `instructor_id` (`instructor_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `results`
@@ -563,19 +749,42 @@ INSERT INTO `results` (`result_id`, `student_id`, `course_id`, `instructor_id`, 
 (14, 1004, 'ECO2UE03A', 104, 'B', 78.20, 'Needs improvement in Public Policy Analysis'),
 (15, 1005, 'DES2UE02A', 105, 'C+', 72.50, 'Basic understanding of Product Design');
 
+--
+-- Triggers `results`
+--
+DROP TRIGGER IF EXISTS `update_final_grade`;
+DELIMITER $$
+CREATE TRIGGER `update_final_grade` BEFORE UPDATE ON `results` FOR EACH ROW BEGIN
+    IF NEW.percentage >= 90 THEN
+        SET NEW.final_grade = 'A+';
+    ELSEIF NEW.percentage >= 80 THEN
+        SET NEW.final_grade = 'A';
+    ELSEIF NEW.percentage >= 70 THEN
+        SET NEW.final_grade = 'B';
+    ELSEIF NEW.percentage >= 60 THEN
+        SET NEW.final_grade = 'C';
+    ELSE
+        SET NEW.final_grade = 'F';
+    END IF;
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `schedule`
 --
 
-CREATE TABLE `schedule` (
-  `Schedule_ID` int(11) NOT NULL,
+DROP TABLE IF EXISTS `schedule`;
+CREATE TABLE IF NOT EXISTS `schedule` (
+  `Schedule_ID` int NOT NULL,
   `Start_Time` time NOT NULL,
   `End_Time` time NOT NULL,
-  `Course_ID` varchar(20) NOT NULL,
-  `Day` varchar(20) NOT NULL,
-  `Location_ID` int(11) DEFAULT NULL
+  `Course_ID` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `Day` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `Location_ID` int DEFAULT NULL,
+  PRIMARY KEY (`Schedule_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -610,13 +819,16 @@ INSERT INTO `schedule` (`Schedule_ID`, `Start_Time`, `End_Time`, `Course_ID`, `D
 -- Table structure for table `student`
 --
 
-CREATE TABLE `student` (
-  `Student_ID` int(11) NOT NULL,
-  `Name` varchar(50) DEFAULT NULL,
-  `Contact` bigint(20) DEFAULT NULL,
-  `Email` varchar(50) DEFAULT NULL,
-  `Year` varchar(10) DEFAULT NULL,
-  `Department_ID` int(11) DEFAULT NULL
+DROP TABLE IF EXISTS `student`;
+CREATE TABLE IF NOT EXISTS `student` (
+  `Student_ID` int NOT NULL,
+  `Name` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Contact` bigint DEFAULT NULL,
+  `Email` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Year` varchar(10) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Department_ID` int DEFAULT NULL,
+  PRIMARY KEY (`Student_ID`),
+  KEY `fk_student_department` (`Department_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -701,16 +913,19 @@ INSERT INTO `student` (`Student_ID`, `Name`, `Contact`, `Email`, `Year`, `Depart
 -- Table structure for table `support_tickets`
 --
 
-CREATE TABLE `support_tickets` (
-  `ticket_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `message` text NOT NULL,
-  `status` enum('Open','In Progress','Resolved','Closed') DEFAULT 'Open',
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `resolved_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `support_tickets`;
+CREATE TABLE IF NOT EXISTS `support_tickets` (
+  `ticket_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `message` text COLLATE utf8mb4_general_ci NOT NULL,
+  `status` enum('Open','In Progress','Resolved','Closed') COLLATE utf8mb4_general_ci DEFAULT 'Open',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `resolved_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`ticket_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `support_tickets`
@@ -727,11 +942,13 @@ INSERT INTO `support_tickets` (`ticket_id`, `user_id`, `name`, `email`, `message
 -- Table structure for table `teacher`
 --
 
-CREATE TABLE `teacher` (
-  `teacher_id` int(11) NOT NULL,
-  `teacher_Name` varchar(50) DEFAULT NULL,
-  `Email` varchar(50) DEFAULT NULL,
-  `Password_hash` varchar(100) NOT NULL DEFAULT 'Test@123'
+DROP TABLE IF EXISTS `teacher`;
+CREATE TABLE IF NOT EXISTS `teacher` (
+  `teacher_id` int NOT NULL,
+  `teacher_Name` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Email` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Password_hash` varchar(100) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Test@123',
+  PRIMARY KEY (`teacher_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -763,9 +980,11 @@ INSERT INTO `teacher` (`teacher_id`, `teacher_Name`, `Email`, `Password_hash`) V
 -- Table structure for table `theory_assessment`
 --
 
-CREATE TABLE `theory_assessment` (
-  `Assessment_ID` int(11) DEFAULT NULL,
-  `Duration` varchar(50) DEFAULT NULL
+DROP TABLE IF EXISTS `theory_assessment`;
+CREATE TABLE IF NOT EXISTS `theory_assessment` (
+  `Assessment_ID` int DEFAULT NULL,
+  `Duration` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  KEY `Assessment_ID` (`Assessment_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -774,13 +993,17 @@ CREATE TABLE `theory_assessment` (
 -- Table structure for table `users`
 --
 
-CREATE TABLE `users` (
-  `user_id` int(11) NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `student_id` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE IF NOT EXISTS `users` (
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `student_id` int DEFAULT NULL,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `fk_student_id` (`student_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
@@ -804,14 +1027,17 @@ INSERT INTO `users` (`user_id`, `name`, `email`, `password_hash`, `student_id`) 
 -- Table structure for table `user_settings`
 --
 
-CREATE TABLE `user_settings` (
-  `setting_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `profile_picture` varchar(255) DEFAULT NULL,
-  `change_password` tinyint(1) DEFAULT 0,
-  `email_notifications` tinyint(1) DEFAULT 1,
-  `push_notifications` tinyint(1) DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `user_settings`;
+CREATE TABLE IF NOT EXISTS `user_settings` (
+  `setting_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `profile_picture` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `change_password` tinyint(1) DEFAULT '0',
+  `email_notifications` tinyint(1) DEFAULT '1',
+  `push_notifications` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`setting_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `user_settings`
@@ -823,259 +1049,6 @@ INSERT INTO `user_settings` (`setting_id`, `user_id`, `profile_picture`, `change
 (6, 12, 'profile_aniket.jpeg', 0, 0, 1);
 
 --
--- Indexes for dumped tables
---
-
---
--- Indexes for table `announcements`
---
-ALTER TABLE `announcements`
-  ADD PRIMARY KEY (`announcement_id`),
-  ADD KEY `announcement_ibfk_1` (`teacher_id`);
-
---
--- Indexes for table `assignment`
---
-ALTER TABLE `assignment`
-  ADD PRIMARY KEY (`Assessment_ID`),
-  ADD KEY `assessment_ibfk_1` (`Course_ID`);
-
---
--- Indexes for table `core_elective`
---
-ALTER TABLE `core_elective`
-  ADD KEY `core_elective_ibfk_1` (`Course_ID`);
-
---
--- Indexes for table `course_mode`
---
-ALTER TABLE `course_mode`
-  ADD PRIMARY KEY (`Course_ID`),
-  ADD KEY `Mode_ID` (`Mode_ID`);
-
---
--- Indexes for table `course_professor`
---
-ALTER TABLE `course_professor`
-  ADD PRIMARY KEY (`Course_ID`,`Professor_ID`),
-  ADD KEY `Professor_ID` (`Professor_ID`);
-
---
--- Indexes for table `department`
---
-ALTER TABLE `department`
-  ADD PRIMARY KEY (`Department_ID`);
-
---
--- Indexes for table `department_professor`
---
-ALTER TABLE `department_professor`
-  ADD PRIMARY KEY (`Professor_ID`,`Department_ID`),
-  ADD KEY `Department_ID` (`Department_ID`);
-
---
--- Indexes for table `discussions`
---
-ALTER TABLE `discussions`
-  ADD PRIMARY KEY (`discussion_id`),
-  ADD KEY `course_id` (`course_id`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- Indexes for table `elective_category`
---
-ALTER TABLE `elective_category`
-  ADD PRIMARY KEY (`Category_ID`);
-
---
--- Indexes for table `elective_course`
---
-ALTER TABLE `elective_course`
-  ADD PRIMARY KEY (`Course_ID`),
-  ADD KEY `Department_ID` (`Department_ID`),
-  ADD KEY `fk_assigned_teacher` (`assigned_teacher`);
-
---
--- Indexes for table `enrollment`
---
-ALTER TABLE `enrollment`
-  ADD KEY `Student_ID` (`Student_ID`),
-  ADD KEY `enrollment_ibfk_1` (`Course_ID`);
-
---
--- Indexes for table `feedback`
---
-ALTER TABLE `feedback`
-  ADD PRIMARY KEY (`feedback_id`),
-  ADD KEY `student_id` (`student_id`),
-  ADD KEY `course_id` (`course_id`);
-
---
--- Indexes for table `location`
---
-ALTER TABLE `location`
-  ADD PRIMARY KEY (`Location_ID`);
-
---
--- Indexes for table `mode`
---
-ALTER TABLE `mode`
-  ADD PRIMARY KEY (`Mode_ID`),
-  ADD UNIQUE KEY `Mode_Type` (`Mode_Type`);
-
---
--- Indexes for table `notifications`
---
-ALTER TABLE `notifications`
-  ADD PRIMARY KEY (`notification_id`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- Indexes for table `open_elective`
---
-ALTER TABLE `open_elective`
-  ADD KEY `open_elective_ibfk_1` (`Course_ID`);
-
---
--- Indexes for table `practical_assessment`
---
-ALTER TABLE `practical_assessment`
-  ADD KEY `Assessment_ID` (`Assessment_ID`);
-
---
--- Indexes for table `reports`
---
-ALTER TABLE `reports`
-  ADD PRIMARY KEY (`report_id`),
-  ADD KEY `generated_by` (`generated_by`);
-
---
--- Indexes for table `results`
---
-ALTER TABLE `results`
-  ADD PRIMARY KEY (`result_id`),
-  ADD KEY `student_id` (`student_id`),
-  ADD KEY `course_id` (`course_id`),
-  ADD KEY `instructor_id` (`instructor_id`);
-
---
--- Indexes for table `schedule`
---
-ALTER TABLE `schedule`
-  ADD PRIMARY KEY (`Schedule_ID`);
-
---
--- Indexes for table `student`
---
-ALTER TABLE `student`
-  ADD PRIMARY KEY (`Student_ID`),
-  ADD KEY `fk_student_department` (`Department_ID`);
-
---
--- Indexes for table `support_tickets`
---
-ALTER TABLE `support_tickets`
-  ADD PRIMARY KEY (`ticket_id`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- Indexes for table `teacher`
---
-ALTER TABLE `teacher`
-  ADD PRIMARY KEY (`teacher_id`);
-
---
--- Indexes for table `theory_assessment`
---
-ALTER TABLE `theory_assessment`
-  ADD KEY `Assessment_ID` (`Assessment_ID`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`user_id`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `fk_student_id` (`student_id`);
-
---
--- Indexes for table `user_settings`
---
-ALTER TABLE `user_settings`
-  ADD PRIMARY KEY (`setting_id`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `announcements`
---
-ALTER TABLE `announcements`
-  MODIFY `announcement_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
-
---
--- AUTO_INCREMENT for table `discussions`
---
-ALTER TABLE `discussions`
-  MODIFY `discussion_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `feedback`
---
-ALTER TABLE `feedback`
-  MODIFY `feedback_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `location`
---
-ALTER TABLE `location`
-  MODIFY `Location_ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `mode`
---
-ALTER TABLE `mode`
-  MODIFY `Mode_ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `notifications`
---
-ALTER TABLE `notifications`
-  MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
--- AUTO_INCREMENT for table `reports`
---
-ALTER TABLE `reports`
-  MODIFY `report_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
-
---
--- AUTO_INCREMENT for table `results`
---
-ALTER TABLE `results`
-  MODIFY `result_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
-
---
--- AUTO_INCREMENT for table `support_tickets`
---
-ALTER TABLE `support_tickets`
-  MODIFY `ticket_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
-
---
--- AUTO_INCREMENT for table `user_settings`
---
-ALTER TABLE `user_settings`
-  MODIFY `setting_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
 -- Constraints for dumped tables
 --
 
@@ -1083,8 +1056,8 @@ ALTER TABLE `user_settings`
 -- Constraints for table `announcements`
 --
 ALTER TABLE `announcements`
-  ADD CONSTRAINT `announcement_ibfk_1` FOREIGN KEY (`teacher_id`) REFERENCES `teacher` (`teacher_ID`),
-  ADD CONSTRAINT `fk_announcements_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `teacher` (`teacher_ID`);
+  ADD CONSTRAINT `announcement_ibfk_1` FOREIGN KEY (`teacher_id`) REFERENCES `teacher` (`teacher_id`),
+  ADD CONSTRAINT `fk_announcements_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `teacher` (`teacher_id`);
 
 --
 -- Constraints for table `assignment`
@@ -1110,103 +1083,20 @@ ALTER TABLE `course_mode`
 --
 ALTER TABLE `course_professor`
   ADD CONSTRAINT `course_professor_ibfk_1` FOREIGN KEY (`Course_ID`) REFERENCES `elective_course` (`Course_ID`),
-  ADD CONSTRAINT `course_professor_ibfk_2` FOREIGN KEY (`Professor_ID`) REFERENCES `teacher` (`teacher_ID`);
+  ADD CONSTRAINT `course_professor_ibfk_2` FOREIGN KEY (`Professor_ID`) REFERENCES `teacher` (`teacher_id`);
 
 --
 -- Constraints for table `department_professor`
 --
 ALTER TABLE `department_professor`
-  ADD CONSTRAINT `department_professor_ibfk_1` FOREIGN KEY (`Professor_ID`) REFERENCES `teacher` (`teacher_ID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `department_professor_ibfk_1` FOREIGN KEY (`Professor_ID`) REFERENCES `teacher` (`teacher_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `department_professor_ibfk_2` FOREIGN KEY (`Department_ID`) REFERENCES `department` (`Department_ID`) ON DELETE CASCADE;
-
---
--- Constraints for table `discussions`
---
-ALTER TABLE `discussions`
-  ADD CONSTRAINT `discussions_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `elective_course` (`Course_ID`),
-  ADD CONSTRAINT `discussions_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
 
 --
 -- Constraints for table `elective_course`
 --
 ALTER TABLE `elective_course`
-  ADD CONSTRAINT `fk_assigned_teacher` FOREIGN KEY (`assigned_teacher`) REFERENCES `teacher` (`teacher_ID`);
-
---
--- Constraints for table `enrollment`
---
-ALTER TABLE `enrollment`
-  ADD CONSTRAINT `enrollment_ibfk_1` FOREIGN KEY (`Course_ID`) REFERENCES `elective_course` (`Course_ID`) ON DELETE CASCADE,
-  ADD CONSTRAINT `enrollment_ibfk_2` FOREIGN KEY (`Student_ID`) REFERENCES `student` (`Student_ID`);
-
---
--- Constraints for table `feedback`
---
-ALTER TABLE `feedback`
-  ADD CONSTRAINT `feedback_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `student` (`Student_ID`),
-  ADD CONSTRAINT `feedback_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `elective_course` (`Course_ID`);
-
---
--- Constraints for table `notifications`
---
-ALTER TABLE `notifications`
-  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
-
---
--- Constraints for table `open_elective`
---
-ALTER TABLE `open_elective`
-  ADD CONSTRAINT `open_elective_ibfk_1` FOREIGN KEY (`Course_ID`) REFERENCES `elective_course` (`Course_ID`);
-
---
--- Constraints for table `practical_assessment`
---
-ALTER TABLE `practical_assessment`
-  ADD CONSTRAINT `practical_assessment_ibfk_1` FOREIGN KEY (`Assessment_ID`) REFERENCES `assignment` (`Assessment_ID`);
-
---
--- Constraints for table `reports`
---
-ALTER TABLE `reports`
-  ADD CONSTRAINT `reports_ibfk_1` FOREIGN KEY (`generated_by`) REFERENCES `users` (`user_id`);
-
---
--- Constraints for table `results`
---
-ALTER TABLE `results`
-  ADD CONSTRAINT `results_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `student` (`Student_ID`),
-  ADD CONSTRAINT `results_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `elective_course` (`Course_ID`),
-  ADD CONSTRAINT `results_ibfk_3` FOREIGN KEY (`instructor_id`) REFERENCES `teacher` (`teacher_ID`);
-
---
--- Constraints for table `student`
---
-ALTER TABLE `student`
-  ADD CONSTRAINT `fk_student_department` FOREIGN KEY (`Department_ID`) REFERENCES `department` (`Department_ID`);
-
---
--- Constraints for table `support_tickets`
---
-ALTER TABLE `support_tickets`
-  ADD CONSTRAINT `support_tickets_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
-
---
--- Constraints for table `theory_assessment`
---
-ALTER TABLE `theory_assessment`
-  ADD CONSTRAINT `theory_assessment_ibfk_1` FOREIGN KEY (`Assessment_ID`) REFERENCES `assignment` (`Assessment_ID`);
-
---
--- Constraints for table `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `fk_student_id` FOREIGN KEY (`student_id`) REFERENCES `student` (`Student_ID`);
-
---
--- Constraints for table `user_settings`
---
-ALTER TABLE `user_settings`
-  ADD CONSTRAINT `user_settings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+  ADD CONSTRAINT `fk_assigned_teacher` FOREIGN KEY (`assigned_teacher`) REFERENCES `teacher` (`teacher_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
